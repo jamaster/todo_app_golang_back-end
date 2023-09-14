@@ -40,7 +40,7 @@ func TestAddTask(t *testing.T) {
 	// call handler
 	handler.ServeHTTP(rr, req)
 	// check for status code
-	if status := rr.Code; status != http.StatusOK {
+	if status := rr.Code; status != http.StatusFound {
 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 }

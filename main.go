@@ -76,9 +76,10 @@ func addTask(db BoldDB) http.HandlerFunc {
 		db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("Tasks"))
 			err := b.Put([]byte(task), []byte(time.Now().Format(time.RFC850)))
+
 			return err
 		})
-		http.Redirect(w, r, "/", http.StatusOK)
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
 
