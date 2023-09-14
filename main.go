@@ -62,8 +62,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	`))
 }
 
+// BoldDB interface
+type BoldDB interface {
+	Update(fn func(*bolt.Tx) error) error
+	Close() error
+}
+
 // implement method addTask to add task (with the created time ) in the database and redirect to home page
-func addTask(db *bolt.DB) http.HandlerFunc {
+func addTask(db BoldDB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		task := r.PostForm.Get("task")
@@ -72,7 +78,7 @@ func addTask(db *bolt.DB) http.HandlerFunc {
 			err := b.Put([]byte(task), []byte(time.Now().Format(time.RFC850)))
 			return err
 		})
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Redirect(w, r, "/", http.StatusOK)
 	}
 }
 
