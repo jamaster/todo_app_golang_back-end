@@ -24,6 +24,11 @@ func (db *MockBoltDB) Close() error {
 	return nil
 }
 
+// implement view method
+func (db *MockBoltDB) View(fn func(*bolt.Tx) error) error {
+	return nil
+}
+
 // test addTask method
 func TestAddTask(t *testing.T) {
 	// create mock database
@@ -41,6 +46,27 @@ func TestAddTask(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 	// check for status code
 	if status := rr.Code; status != http.StatusFound {
+		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
+}
+
+// test listTask method
+func TestListTask(t *testing.T) {
+	// create mock database
+	db := &MockBoltDB{}
+	// create request to list task
+	req, err := http.NewRequest("GET", "/list", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// create response recorder to record the response
+	rr := httptest.NewRecorder()
+	// create handler
+	handler := http.HandlerFunc(listTask(db))
+	// call handler
+	handler.ServeHTTP(rr, req)
+	// check for status code
+	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("Handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 }

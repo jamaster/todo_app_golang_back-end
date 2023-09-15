@@ -41,7 +41,7 @@ func httpServer(db *bolt.DB) {
 	http.HandleFunc("/add", addTask(db))
 	http.HandleFunc("/delete", deleteTask(db))
 	//http.HandleFunc("/update", updateTask(db))
-	//http.HandleFunc("/list", listTask(db))
+	http.HandleFunc("/list", listTask(db))
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -52,11 +52,45 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			<head>
 				<title>Task Manager</title>
 			</head>
-			<body>
+            <script>
+			  function fetchTaskList() {
+				var xhr = new XMLHttpRequest();
+				xhr.onreadystatechange = function() {
+				  if (xhr.readyState === 4 && xhr.status === 200) {
+					var taskList = document.getElementById("taskList");
+					taskList.innerHTML = ""; // Очистити список перед оновленням
+			
+					// Розділити текст на рядки (передполагається, що кожен рядок - це одне завдання)
+					var taskLines = xhr.responseText.split('\n');
+			
+					// Додати кожне завдання до списку
+					for (var i = 0; i < taskLines.length; i++) {
+					  var task = taskLines[i];
+					  if (task.trim() !== "") {
+						var listItem = document.createElement("li");
+						listItem.textContent = task;
+						taskList.appendChild(listItem);
+					  }
+					}
+				  }
+				};
+				xhr.open("GET", "/list", true);
+				xhr.send();
+			  }
+			</script>
+
+			<body onload="fetchTaskList()">
+				<h1>Task Manager</h1>
+				<h2>Add Task</h2>
+       
 				<form action="/add" method="post">
 					<input type="text" name="task">
 					<input type="submit" value="Add">
 				</form>
+
+
+				<h2>Tasks</h2>               
+				<ul id="taskList"></ul>
 			</body>
 		</html>
 	`))
@@ -66,6 +100,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 type BoldDB interface {
 	Update(fn func(*bolt.Tx) error) error
 	Close() error
+	View(fn func(*bolt.Tx) error) error
 }
 
 // implement method addTask to add task (with the created time ) in the database and redirect to home page
@@ -94,5 +129,20 @@ func deleteTask(db *bolt.DB) http.HandlerFunc {
 			return err
 		})
 		http.Redirect(w, r, "/", http.StatusFound)
+	}
+}
+
+// implement method listTask to list all the tasks from the database
+func listTask(db BoldDB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		db.View(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte("Tasks"))
+			b.ForEach(func(k, v []byte) error {
+				w.Write([]byte("Task: " + string(k) + " Created: " + string(v) + "\n"))
+				return nil
+			})
+			return nil
+
+		})
 	}
 }
