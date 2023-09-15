@@ -40,7 +40,6 @@ func httpServer(db *bolt.DB) {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/add", addTask(db))
 	http.HandleFunc("/delete", deleteTask(db))
-	//http.HandleFunc("/update", updateTask(db))
 	http.HandleFunc("/list", listTask(db))
 	http.ListenAndServe(":8080", nil)
 }
@@ -69,6 +68,23 @@ func handler(w http.ResponseWriter, r *http.Request) {
 					  if (task.trim() !== "") {
 						var listItem = document.createElement("li");
 						listItem.textContent = task;
+                        //add delete button to delete task
+						var deleteButton = document.createElement("button");
+						deleteButton.textContent = "Delete";
+						deleteButton.onclick = function() {
+						<!-- how to get task name here -->
+						  var taskText = this.parentNode.textContent;
+                          // task is substring between Task: and Created:
+						  var task = taskText.substring(6, taskText.indexOf("Created:") - 1);
+                 		  var xhr = new XMLHttpRequest();
+						  xhr.open("POST", "/delete", true);
+						  xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+						  xhr.send("task=" + encodeURIComponent(task));
+                          // redirect to home page
+						  window.location.href = "/";
+
+						};
+						listItem.appendChild(deleteButton);
 						taskList.appendChild(listItem);
 					  }
 					}
