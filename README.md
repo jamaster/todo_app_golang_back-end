@@ -1,6 +1,6 @@
 # todo_app_golang_back-end
 
-## Description
+# Description
 This is a simple todo app back-end written in Golang. It uses a bolt database to store the data.
 
 
